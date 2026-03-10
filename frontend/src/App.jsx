@@ -13,7 +13,8 @@ import Delivery from './components/Delivery'
 import './App.css'
 import React from 'react'
 
-axios.defaults.baseURL = 'http://localhost:5000'
+axios.defaults.baseURL = import.meta.env.DEV ? 'http://localhost:5000' : ''
+
 
 class ErrorBoundary extends React.Component {
   constructor(props) {

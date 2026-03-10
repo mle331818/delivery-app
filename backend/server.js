@@ -6,6 +6,7 @@ import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { existsSync } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -1009,18 +1010,20 @@ app.patch('/api/delivery/orders/:id/status', authenticateToken, requireDeliveryR
 });
 
 // ── Serve built React frontend in production ──
-import { existsSync } from 'fs';
 const distPath = join(__dirname, '..', 'frontend', 'dist');
 if (existsSync(distPath)) {
   app.use(express.static(distPath));
-  // SPA fallback — let React Router handle all non-API routes
-  app.get('*', (req, res) => {
+  // SPA fallback — ONLY for non-API routes so React Router works
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next(); // never intercept API calls
     res.sendFile(join(distPath, 'index.html'));
   });
   console.log('📦 Serving static frontend from', distPath);
+} else {
+  console.log('⚠️  No frontend dist found — API-only mode');
 }
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 API ready at http://localhost:${PORT}/api`);
 });
