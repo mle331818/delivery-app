@@ -1,4 +1,25 @@
-node_modules 
-frontend/node_modules 
-backend/node_modules 
-backend/delivery.db 
+# Dependencies - never push these
+node_modules/
+backend/node_modules/
+frontend/node_modules/
+
+# Database - starts fresh on server (auto-seeded)
+backend/delivery.db
+
+# Local env files
+.env
+.env.local
+
+# Temp files
+*.tmp
+backend/temp_update.js
+backend/update_orders.mjs
+backend/temp_update.js
+temp_update.js
+
+# Logs
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
