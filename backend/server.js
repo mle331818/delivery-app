@@ -121,15 +121,29 @@ async function initDatabase() {
         is_active INTEGER DEFAULT 1,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       );
+
+      CREATE TABLE IF NOT EXISTS transactions (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL, -- income, expense, salary
+        amount REAL NOT NULL,
+        description TEXT,
+        order_id TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      );
     `);
 
     // Check for new columns in users table
     try {
       await run('ALTER TABLE users ADD COLUMN loyalty_points INTEGER DEFAULT 0');
     } catch (e) { /* ignore if exists */ }
+    try {
+      await run('ALTER TABLE users ADD COLUMN salary REAL DEFAULT 0');
+    } catch (e) { /* ignore */ }
 
-    // ... inside initDatabase ...
     // Check for new columns in orders table
+    try {
+      await run('ALTER TABLE orders ADD COLUMN table_name TEXT');
+    } catch (e) { /* ignore */ }
     try {
       await run('ALTER TABLE orders ADD COLUMN points_awarded INTEGER DEFAULT 0');
     } catch (e) { /* ignore */ }
@@ -644,10 +658,10 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
   }
 });
 
-// Admin Staff & Promo Management
+// Admin Staff, Menu & Promo Management
 app.post('/api/admin/staff', authenticateToken, requireAdminRole, async (req, res) => {
   try {
-    const { firstName, lastName, email, phone, password, role } = req.body;
+    const { firstName, lastName, email, phone, password, role, salary } = req.body;
 
     if (!['delivery', 'kitchen'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
@@ -660,11 +674,18 @@ app.post('/api/admin/staff', authenticateToken, requireAdminRole, async (req, re
 
     const userId = role + '_' + Date.now();
     const passwordHash = bcrypt.hashSync(password, 10);
+    const staffSalary = parseFloat(salary || 0);
 
-    await run('INSERT INTO users (id, email, password_hash, role, first_name, last_name, phone) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [userId, email, passwordHash, role, firstName, lastName, phone]);
+    await run('INSERT INTO users (id, email, password_hash, role, first_name, last_name, phone, salary) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [userId, email, passwordHash, role, firstName, lastName, phone, staffSalary]);
 
-    res.status(201).json({ id: userId, firstName, lastName, email, role });
+    if (staffSalary > 0) {
+      const txId = 'tx_' + Date.now();
+      await run("INSERT INTO transactions (id, type, amount, description) VALUES (?, 'salary', ?, ?)",
+        [txId, staffSalary, `Initial salary payment for ${firstName} ${lastName}`]);
+    }
+
+    res.status(201).json({ id: userId, firstName, lastName, email, role, salary: staffSalary });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -672,8 +693,57 @@ app.post('/api/admin/staff', authenticateToken, requireAdminRole, async (req, re
 
 app.get('/api/admin/staff', authenticateToken, requireAdminRole, async (req, res) => {
   try {
-    const staff = await all('SELECT id, first_name, last_name, email, phone, role FROM users WHERE role IN ("delivery", "kitchen")');
+    const staff = await all('SELECT id, first_name, last_name, email, phone, role, salary FROM users WHERE role IN ("delivery", "kitchen")');
     res.json(staff);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.put('/api/admin/staff/:id', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const { firstName, lastName, email, phone, role, salary, password, adminPassword } = req.body;
+    
+    // Verify admin password
+    const admin = await get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+    if (!bcrypt.compareSync(adminPassword, admin.password_hash)) {
+      return res.status(403).json({ error: 'Invalid admin password' });
+    }
+
+    const staffSalary = parseFloat(salary || 0);
+    let sql = 'UPDATE users SET first_name = ?, last_name = ?, email = ?, phone = ?, role = ?, salary = ?';
+    const params = [firstName, lastName, email, phone, role, staffSalary];
+
+    if (password) {
+      sql += ', password_hash = ?';
+      params.push(bcrypt.hashSync(password, 10));
+    }
+
+    sql += ' WHERE id = ?';
+    params.push(req.params.id);
+
+    await run(sql, params);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.delete('/api/admin/staff/:id', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const { adminPassword } = req.body;
+    
+    const admin = await get('SELECT password_hash FROM users WHERE id = ?', [req.user.id]);
+    if (!bcrypt.compareSync(adminPassword, admin.password_hash)) {
+      return res.status(403).json({ error: 'Invalid admin password' });
+    }
+
+    if (req.user.id === req.params.id) {
+       return res.status(400).json({ error: 'Cannot delete your own admin account' });
+    }
+
+    await run('DELETE FROM users WHERE id = ?', [req.params.id]);
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -849,6 +919,138 @@ app.post('/api/admin/drivers', authenticateToken, requireAdminRole, async (req, 
       [userId, email, passwordHash, 'delivery', firstName, lastName, phone]);
 
     res.status(201).json({ id: userId, firstName, lastName, email, role: 'delivery' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/customers', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const customers = await all('SELECT id, first_name, last_name, email, phone, loyalty_points FROM users WHERE role = "customer"');
+    res.json(customers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/transactions', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const transactions = await all('SELECT * FROM transactions ORDER BY created_at DESC');
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/transactions', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const { type, amount, description } = req.body;
+    const id = 'tx_' + Date.now();
+    await run('INSERT INTO transactions (id, type, amount, description) VALUES (?, ?, ?, ?)',
+      [id, type, amount, description]);
+    res.status(201).json({ id, type, amount, description });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/settings', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const rate = await get("SELECT value FROM settings WHERE key = 'loyalty_rate'");
+    res.json({ loyaltyRate: rate ? rate.value : 1 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/settings', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const { loyaltyRate } = req.body;
+    await run(`
+      INSERT INTO settings (id, key, value) VALUES ('s1', 'loyalty_rate', ?)
+      ON CONFLICT(key) DO UPDATE SET value = ?
+    `, [loyaltyRate, loyaltyRate]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/admin/pos-order', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const { items, tableName } = req.body;
+    if (!items || items.length === 0) return res.status(400).json({ error: 'No items' });
+
+    let subtotal = 0;
+    const priceMap = {};
+    for (const item of items) {
+       const mi = await get('SELECT name, price FROM menu_items WHERE id = ?', [item.menuItemId]);
+       subtotal += mi.price * item.quantity;
+       priceMap[item.menuItemId] = mi.price;
+    }
+
+    const tax = subtotal * 0.08;
+    const total = subtotal + tax;
+    const orderId = 'pos_' + Date.now();
+
+    await run(`
+      INSERT INTO orders (id, subtotal, delivery_fee, tax, total, payment_status, status, delivery_address, delivery_phone, table_name)
+      VALUES (?, ?, 0, ?, ?, 'pending', 'pending', ?, 'POS Order', ?)
+    `, [orderId, subtotal, tax, total, tableName + ' - Dine In', tableName]);
+
+    for (const item of items) {
+      await run('INSERT INTO order_items (id, order_id, menu_item_id, quantity, price_at_time) VALUES (?, ?, ?, ?, ?)',
+        ['oi_' + Date.now() + Math.random(), orderId, item.menuItemId, item.quantity, priceMap[item.menuItemId]]);
+    }
+
+    const fullOrder = await get('SELECT * FROM orders WHERE id = ?', [orderId]);
+    const fullItems = await all(`
+      SELECT oi.*, mi.name FROM order_items oi 
+      JOIN menu_items mi ON oi.menu_item_id = mi.id 
+      WHERE oi.order_id = ?
+    `, [orderId]);
+
+    res.status(201).json({ success: true, order: { ...fullOrder, items: fullItems } });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/api/admin/open-tables', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const period = req.query.period || 'day';
+    let dateFilter = "";
+    if (period === 'week') dateFilter = "AND date(created_at) >= date('now', '-7 days')";
+    else if (period === 'month') dateFilter = "AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')";
+    else if (period === 'day') dateFilter = "AND date(created_at) = date('now')";
+
+    const orders = await all(`SELECT * FROM orders WHERE id LIKE 'pos_%' ${dateFilter} ORDER BY created_at DESC`);
+    for (const o of orders) {
+      o.items = await all(`
+        SELECT oi.*, mi.name FROM order_items oi 
+        JOIN menu_items mi ON oi.menu_item_id = mi.id 
+        WHERE oi.order_id = ?
+      `, [o.id]);
+    }
+    res.json(orders);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.patch('/api/admin/pos-order/:id/pay', authenticateToken, requireAdminRole, async (req, res) => {
+  try {
+    const order = await get("SELECT * FROM orders WHERE id = ? AND id LIKE 'pos_%'", [req.params.id]);
+    if (!order) return res.status(404).json({ error: 'Order not found' });
+    if (order.payment_status === 'paid') return res.status(400).json({ error: 'Already paid' });
+
+    await run("UPDATE orders SET payment_status = 'paid', status = 'delivered' WHERE id = ?", [req.params.id]);
+    
+    const txId = 'tx_' + Date.now();
+    await run("INSERT INTO transactions (id, type, amount, description, order_id) VALUES (?, 'income', ?, ?, ?)",
+      [txId, order.total, `POS Payment - ${order.table_name || 'POS'}`, order.id]);
+
+    res.json({ success: true });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
