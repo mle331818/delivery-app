@@ -4,23 +4,21 @@
 }
 
 .orders-page h2 {
-  font-size: 2.2rem;
-  font-weight: 900;
+  font-size: 2rem;
   margin-bottom: 2rem;
-  color: #2c3e50;
-  letter-spacing: -1px;
+  color: #333;
 }
 
 .no-orders {
   text-align: center;
-  padding: 5rem 2rem;
+  padding: 4rem 2rem;
   background: white;
-  border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .no-orders p {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   color: #666;
   margin-bottom: 2rem;
 }
@@ -28,153 +26,107 @@
 .orders-list {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.5rem;
 }
 
 .order-card {
   background: white;
-  border-radius: 20px;
-  padding: 2rem;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.04);
-  border: 1px solid rgba(0,0,0,0.02);
-  transition: transform 0.2s;
-}
-
-.order-card:hover {
-  transform: translateY(-4px);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .order-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 2px solid #f8f9fa;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e0e0e0;
 }
 
 .order-header h3 {
-  font-size: 1.3rem;
-  font-weight: 800;
-  color: #222;
-  margin: 0;
-  letter-spacing: -0.5px;
+  font-size: 1.25rem;
+  color: #333;
+  margin-bottom: 0.25rem;
 }
 
 .order-date {
-  color: #999;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .status-badge {
   display: inline-block;
-  padding: 0.6rem 1.25rem;
-  border-radius: 50px;
-  background: #f8f9fa;
-  color: #666;
-  font-size: 0.8rem;
-  font-weight: 800;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
 }
 
 .order-estimated-time {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 8px 16px;
-  background-color: #f0f7ff;
-  color: #007bff;
-  border-radius: 12px;
-  font-size: 0.9rem;
-  font-weight: 800;
-  border: 1.5px solid #d0e7ff;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 12px;
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid #bbdefb;
 }
 
 .order-items {
-  margin-bottom: 1.5rem;
-  background: #fcfcfc;
-  padding: 1.25rem;
-  border-radius: 16px;
+  margin-bottom: 1rem;
 }
 
 .order-item {
   display: flex;
   justify-content: space-between;
-  padding: 0.6rem 0;
-  color: #444;
-  font-weight: 500;
-  border-bottom: 1px solid rgba(0,0,0,0.03);
-}
-
-.order-item:last-child {
-  border-bottom: none;
+  padding: 0.5rem 0;
+  color: #666;
 }
 
 .order-footer {
-  padding-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e0e0e0;
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .order-address {
   flex: 1;
-  min-width: 250px;
+  min-width: 200px;
   color: #666;
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 0.9rem;
 }
 
 .order-address strong {
-  color: #222;
-  display: block;
-  margin-bottom: 0.25rem;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  color: #333;
 }
 
 .order-total {
-  font-size: 1.8rem;
-  font-weight: 900;
+  font-size: 1.25rem;
   color: #d32f2f;
-  letter-spacing: -0.5px;
 }
 
 @media (max-width: 768px) {
   .order-header {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-    gap: 1.25rem;
+    flex-direction: column;
+    gap: 1rem;
   }
 
-  .status-badge {
-    width: 100%;
-    text-align: center;
-  }
-
-  .order-card {
-    padding: 1.5rem;
-  }
-
-  .order-total {
-    width: 100%;
-    text-align: right;
-    border-top: 2px dashed #eee;
-    padding-top: 1rem;
-    margin-top: -0.5rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .orders-page h2 {
-    font-size: 1.8rem;
-    text-align: center;
+  .order-footer {
+    flex-direction: column;
   }
 }
 

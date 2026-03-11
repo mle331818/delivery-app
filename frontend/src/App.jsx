@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, Link } from 'react-router-dom'
 import axios from 'axios'
 import Menu from './components/Menu'
 import Cart from './components/Cart'
@@ -49,81 +49,6 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const Header = ({ user, logout, cart, setShowLoyaltyModal, mobileMenuOpen, setMobileMenuOpen }) => {
-  const location = useLocation()
-
-  useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [location.pathname, setMobileMenuOpen])
-
-  return (
-    <header className="header">
-      <div className="container">
-        <div className="header-top">
-          <Link to="/" className="branding-link">
-            <h1>🍣 <span className="logo-text">Sushi Stun</span></h1>
-          </Link>
-
-          <div className="mobile-actions">
-            {cart.length > 0 && (
-              <Link to="/cart" className="mobile-cart-btn">
-                🛒 <span className="cart-count">{cart.reduce((sum, item) => sum + item.quantity, 0)}</span>
-              </Link>
-            )}
-            <button
-              className={`hamburger ${mobileMenuOpen ? 'open' : ''}`}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              aria-label="Menu"
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
-          </div>
-        </div>
-
-        <nav className={`nav-menu ${mobileMenuOpen ? 'active' : ''}`}>
-          {user ? (
-            <div className="nav-group user-info-mobile">
-              <span className="welcome-text">Hi, {user.firstName || user.email}!</span>
-              <span
-                className="loyalty-badge"
-                onClick={() => setShowLoyaltyModal(true)}
-              >
-                💎 {user.loyalty_points || 0} Pts
-              </span>
-            </div>
-          ) : null}
-
-          <div className="nav-group main-links">
-            <Link to="/">Menu</Link>
-            {user ? (
-              <>
-                <Link to="/orders">My Orders</Link>
-                {(user.role === 'kitchen' || user.role === 'admin') && <Link to="/kitchen">Kitchen</Link>}
-                {user.role === 'admin' && <Link to="/admin">Admin</Link>}
-                {user.role === 'delivery' && <Link to="/delivery">Delivery</Link>}
-                <button onClick={logout} className="logout-btn">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" className="login-link">Login</Link>
-                <Link to="/register" className="register-link">Register</Link>
-              </>
-            )}
-          </div>
-
-          {cart.length > 0 && (
-            <Link to="/cart" className="cart-link desktop-only">
-              🛒 Cart ({cart.reduce((sum, item) => sum + item.quantity, 0)})
-            </Link>
-          )}
-        </nav>
-      </div>
-    </header>
-  )
-}
-
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -138,7 +63,6 @@ function App() {
   })
   const [cartNotification, setCartNotification] = useState(null)
   const [showLoyaltyModal, setShowLoyaltyModal] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     const initApp = async () => {
@@ -231,14 +155,48 @@ function App() {
     <ErrorBoundary>
       <Router>
         <div className="app">
-          <Header
-            user={user}
-            logout={logout}
-            cart={cart}
-            setShowLoyaltyModal={setShowLoyaltyModal}
-            mobileMenuOpen={mobileMenuOpen}
-            setMobileMenuOpen={setMobileMenuOpen}
-          />
+          <header className="header">
+            <div className="container">
+              <Link to="/" className="branding-link">
+                <h1>🍣 Sushi Stun Delivery</h1>
+              </Link>
+              <nav>
+                {user ? (
+                  <>
+                    <span>Welcome, {user.firstName || user.email}!</span>
+                    <span
+                      className="loyalty-badge"
+                      onClick={() => setShowLoyaltyModal(true)}
+                      title="Click to see details"
+                    >
+                      💎 {user.loyalty_points || 0} Pts
+                    </span>
+                    <Link to="/orders">My Orders</Link>
+                    {(user.role === 'kitchen' || user.role === 'admin') && (
+                      <Link to="/kitchen">Kitchen</Link>
+                    )}
+                    {user.role === 'admin' && (
+                      <Link to="/admin">Admin</Link>
+                    )}
+                    {user.role === 'delivery' && (
+                      <Link to="/delivery">Delivery</Link>
+                    )}
+                    <button onClick={logout}>Logout</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/login">Login</Link>
+                    <Link to="/register">Register</Link>
+                  </>
+                )}
+                {cart.length > 0 && (
+                  <Link to="/cart" className="cart-link">
+                    Cart ({cart.reduce((sum, item) => sum + item.quantity, 0)})
+                  </Link>
+                )}
+              </nav>
+            </div>
+          </header>
 
           {cartNotification && (
             <div className="cart-notification">
