@@ -289,7 +289,7 @@ function Admin() {
     const posPayOrder = async (orderId) => {
         setPosPayLoading(orderId)
         try {
-            await axios.patch(`/api/admin/pos-order/${orderId}`)
+            await axios.patch(`/api/admin/pos-order/${orderId}/pay`)
             loadData()
             // If the invoice modal was showing this order, close it
             if (posInvoice && posInvoice.id === orderId) setPosInvoice(null)
@@ -573,7 +573,6 @@ function Admin() {
                     )}
                 </div>
                 </>
-            )}
             )}
             {activeTab === 'overview' && (
                 <div className="stats-container-col">
