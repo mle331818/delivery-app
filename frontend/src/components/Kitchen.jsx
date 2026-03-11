@@ -16,18 +16,19 @@ function Kitchen() {
   }, []) // Load all orders, not filtered
 
   const loadAllOrders = () => {
-    // Fetch orders for all statuses to get accurate counts
     Promise.all([
       axios.get('/api/kitchen/orders?status=pending'),
       axios.get('/api/kitchen/orders?status=preparing'),
-      axios.get('/api/kitchen/orders?status=ready')
+      axios.get('/api/kitchen/orders?status=ready'),
+      axios.get('/api/kitchen/orders?status=delivered')
     ])
-      .then(([pendingRes, preparingRes, readyRes]) => {
+      .then(([pendingRes, preparingRes, readyRes, deliveredRes]) => {
         // Combine all orders
         const all = [
           ...pendingRes.data,
           ...preparingRes.data,
-          ...readyRes.data
+          ...readyRes.data,
+          ...deliveredRes.data
         ]
         setAllOrders(all)
         setLoading(false)
@@ -47,6 +48,7 @@ function Kitchen() {
   const pendingCount = allOrders.filter(o => o.status === 'pending').length
   const preparingCount = allOrders.filter(o => o.status === 'preparing').length
   const readyCount = allOrders.filter(o => o.status === 'ready').length
+  const deliveredCount = allOrders.filter(o => o.status === 'delivered').length
 
   const updateStatus = (orderId, newStatus) => {
     const payload = { status: newStatus }
@@ -113,6 +115,10 @@ function Kitchen() {
             <span className="stat-number">{readyCount}</span>
             <span className="stat-label">Ready</span>
           </div>
+          <div className="stat-badge delivered">
+            <span className="stat-number">{deliveredCount}</span>
+            <span className="stat-label">Delivered</span>
+          </div>
         </div>
       </div>
 
@@ -135,9 +141,61 @@ function Kitchen() {
         >
           ✅ Ready ({readyCount})
         </button>
+        <button
+          className={statusFilter === 'delivered' ? 'active delivered' : 'delivered'}
+          onClick={() => setStatusFilter('delivered')}
+        >
+          🎉 Delivered ({deliveredCount})
+        </button>
       </div>
 
-      {orders.length === 0 ? (
+      {statusFilter === 'delivered' ? (() => {
+        const deliveredTotal = orders.reduce((sum, o) => sum + (o.total || 0), 0)
+        return (
+          <div className="orders-management">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3>✅ Delivered Orders</h3>
+                  <div style={{ background: '#dcfce7', color: '#166534', padding: '0.4rem 1rem', borderRadius: '8px', fontWeight: 700 }}>
+                      {orders.length} Deliveries | Total: ${(deliveredTotal || 0).toFixed(2)}
+                  </div>
+              </div>
+              {orders.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '3rem', color: '#888' }}>No delivered orders yet.</div>
+              ) : (
+                  <div className="orders-table-container">
+                      <table className="orders-table">
+                          <thead>
+                              <tr>
+                                  <th>Order ID</th>
+                                  <th>Items</th>
+                                  <th>Address</th>
+                                  <th>Driver</th>
+                                  <th>Total</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {orders.map(order => (
+                                  <tr key={order.id}>
+                                      <td style={{ fontWeight: 700 }}>#{order.id.slice(-6).toUpperCase()}</td>
+                                      <td style={{ fontSize: '0.85rem', color: '#555' }}>
+                                          {order.items?.map(i => `${i.quantity}× ${i.name}`).join(', ') || '-'}
+                                      </td>
+                                      <td style={{ fontSize: '0.85rem' }}>{order.delivery_address}</td>
+                                      <td>
+                                          <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '0.2rem 0.6rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                                              🚗 {order.driver_name || 'Self-assigned'}
+                                          </span>
+                                      </td>
+                                      <td style={{ fontWeight: 700, color: '#166534' }}>${(order.total || 0).toFixed(2)}</td>
+                                  </tr>
+                              ))}
+                          </tbody>
+                      </table>
+                  </div>
+              )}
+          </div>
+        )
+      })() : orders.length === 0 ? (
         <div className="no-orders">
           <p>✨ No {statusFilter} orders at the moment.</p>
         </div>
@@ -181,6 +239,9 @@ function Kitchen() {
                   )}
                   {order.status === 'ready' && (
                     <span className="ready-badge">✅ READY FOR PICKUP</span>
+                  )}
+                  {order.status === 'delivered' && (
+                    <span className="ready-badge" style={{ background: '#9c27b0' }}>🎉 DELIVERED</span>
                   )}
                 </div>
               </div>
