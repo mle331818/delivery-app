@@ -443,24 +443,22 @@ function Admin() {
                 </div>
 
                 {/* Open Bills */}
-                <div style={{ marginTop: '1.75rem' }}>
-                    {/* Section Header */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
-                        <h3 style={{ margin: 0, fontWeight: 900, color: '#1a1a1a', fontSize: '1.15rem', letterSpacing: '-0.3px' }}>🧾 Bills</h3>
+                <div className="bills-container">
+                    <div className="bills-header">
+                        <h3>🧾 Bills</h3>
 
                         {/* Period Filter */}
-                        <div style={{ display: 'flex', gap: '4px', background: '#f0f0f0', borderRadius: '10px', padding: '3px' }}>
+                        <div className="period-filter">
                             {[['day', 'Today'], ['week', 'This Week'], ['month', 'This Month'], ['all', 'All Time']].map(([val, label]) => (
-                                <button key={val} onClick={() => setPosPeriod(val)} style={{
-                                    padding: '5px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                    fontWeight: 700, fontSize: '0.78rem', transition: 'all 0.15s',
-                                    background: posPeriod === val ? '#c62828' : 'transparent',
-                                    color: posPeriod === val ? '#fff' : '#666',
-                                }}>{label}</button>
+                                <button 
+                                    key={val} 
+                                    onClick={() => setPosPeriod(val)} 
+                                    className={`period-btn ${posPeriod === val ? 'active' : ''}`}
+                                >{label}</button>
                             ))}
                         </div>
 
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: '1.5rem', fontSize: '0.82rem', color: '#888' }}>
+                        <div className="bills-stats">
                             <span>Total: <strong style={{ color: '#1a1a1a' }}>{openTables.length}</strong></span>
                             <span>Unpaid: <strong style={{ color: '#c62828' }}>{formatCurrency(openTables.filter(o => o.payment_status === 'pending').reduce((s, o) => s + o.total, 0))}</strong></span>
                             <span>Collected: <strong style={{ color: '#2e7d32' }}>{formatCurrency(openTables.filter(o => o.payment_status === 'paid').reduce((s, o) => s + o.total, 0))}</strong></span>
@@ -468,19 +466,13 @@ function Admin() {
                     </div>
 
                     {openTables.length === 0 ? (
-                        <div style={{ background: '#fff', borderRadius: '16px', padding: '3rem', textAlign: 'center', color: '#bbb', border: '1px solid #f0f0f0', fontSize: '0.9rem' }}>
+                        <div className="card" style={{ textAlign: 'center', color: '#bbb', padding: '3rem' }}>
                             No POS orders for this period.
                         </div>
                     ) : (
-                        <div style={{ background: '#fff', borderRadius: '16px', boxShadow: '0 2px 16px rgba(0,0,0,0.06)', overflow: 'hidden', border: '1px solid #efefef' }}>
+                        <div className="bills-table-wrapper">
                             {/* Column Headers */}
-                            <div style={{
-                                display: 'grid', gridTemplateColumns: '150px 1fr 100px 80px 190px',
-                                padding: '0.6rem 1.5rem', background: '#f8f8f8',
-                                borderBottom: '2px solid #f0f0f0',
-                                fontSize: '0.72rem', fontWeight: 700, color: '#aaa',
-                                textTransform: 'uppercase', letterSpacing: '0.6px'
-                            }}>
+                            <div className="bills-grid bills-grid-header">
                                 <span>Table / Time</span>
                                 <span>Items Ordered</span>
                                 <span style={{ textAlign: 'right' }}>Total</span>
@@ -492,77 +484,54 @@ function Admin() {
                             {openTables.map((order, idx) => {
                                 const isPaid = order.payment_status === 'paid'
                                 return (
-                                    <div key={order.id}
-                                        style={{
-                                            display: 'grid', gridTemplateColumns: '150px 1fr 100px 80px 190px',
-                                            alignItems: 'center',
-                                            padding: '0.9rem 1.5rem',
-                                            borderBottom: idx < openTables.length - 1 ? '1px solid #f5f5f5' : 'none',
-                                            background: isPaid ? '#fafff8' : '#fff',
-                                            transition: 'background 0.15s',
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.background = isPaid ? '#f2fdf0' : '#f8f8ff'}
-                                        onMouseLeave={e => e.currentTarget.style.background = isPaid ? '#fafff8' : '#fff'}
-                                    >
+                                    <div key={order.id} className={`bills-grid ${isPaid ? 'paid' : ''}`}>
                                         {/* Table + date/time */}
-                                        <div>
-                                            <div style={{ fontWeight: 800, fontSize: '0.93rem', color: '#1a1a1a' }}>
-                                                🪑 {order.table_name || order.delivery_address?.replace(' - Dine In', '')}
-                                            </div>
-                                            <div style={{ fontSize: '0.72rem', color: '#bbb', marginTop: '2px' }}>
+                                        <div className="bill-id-time">
+                                            <strong>🪑 {order.table_name || order.delivery_address?.replace(' - Dine In', '')}</strong>
+                                            <span>
                                                 {new Date(order.created_at).toLocaleDateString([], { month: 'short', day: 'numeric' })}
                                                 {' '}·{' '}
                                                 {new Date(order.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </div>
+                                            </span>
                                         </div>
 
                                         {/* Item chips */}
-                                        <div style={{ paddingRight: '1rem', display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
+                                        <div className="bill-items">
                                             {(order.items || []).map((item, i) => (
-                                                <span key={i} style={{
-                                                    display: 'inline-flex', alignItems: 'center', gap: '3px',
-                                                    background: '#f3f4f6', borderRadius: '6px', padding: '2px 8px',
-                                                    fontSize: '0.76rem', fontWeight: 600, color: '#444',
-                                                }}>
-                                                    <span style={{ color: '#c62828', fontWeight: 800 }}>×{item.quantity}</span>
+                                                <span key={i} className="bill-item-chip">
+                                                    <span className="bill-item-qty">×{item.quantity}</span>
                                                     {item.name}
                                                 </span>
                                             ))}
                                         </div>
 
                                         {/* Total */}
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ fontWeight: 900, fontSize: '0.97rem', color: '#111' }}>{formatCurrency(order.total)}</div>
-                                            <div style={{ fontSize: '0.68rem', color: '#ccc' }}>incl. tax</div>
+                                        <div className="bill-total">
+                                            <div className="bill-total-amount">{formatCurrency(order.total)}</div>
+                                            <div className="bill-total-sub">incl. tax</div>
                                         </div>
 
                                         {/* Status badge */}
-                                        <div style={{ textAlign: 'center' }}>
-                                            {isPaid ? (
-                                                <span style={{ background: '#dcfce7', color: '#166534', borderRadius: '20px', padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>✅ Paid</span>
-                                            ) : (
-                                                <span style={{ background: '#fff7ed', color: '#c2410c', borderRadius: '20px', padding: '3px 10px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>⏳ Pending</span>
-                                            )}
+                                        <div className="bill-status">
+                                            <span className={`bill-badge ${isPaid ? 'paid' : 'pending'}`}>
+                                                {isPaid ? '✅ Paid' : '⏳ Pending'}
+                                            </span>
                                         </div>
 
                                         {/* Actions */}
-                                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                                            {/* Invoice / Reprint always available */}
+                                        <div className="bill-actions">
                                             <button
                                                 onClick={() => setPosInvoice({ ...order, cartSnapshot: order.items?.map(i => ({ ...i, price: i.price_at_time })) })}
+                                                className="btn-details"
                                                 style={{ padding: '6px 12px', background: '#EFF6FF', color: '#1d4ed8', border: '1.5px solid #BFDBFE', borderRadius: '8px', fontWeight: 700, cursor: 'pointer', fontSize: '0.78rem', whiteSpace: 'nowrap' }}
-                                                onMouseEnter={e => { e.target.style.background = '#1d4ed8'; e.target.style.color = '#fff'; }}
-                                                onMouseLeave={e => { e.target.style.background = '#EFF6FF'; e.target.style.color = '#1d4ed8'; }}
                                             >🖨️ {isPaid ? 'Reprint' : 'Invoice'}</button>
 
-                                            {/* Mark Paid — only for pending */}
                                             {!isPaid && (
                                                 <button
                                                     onClick={() => posPayOrder(order.id)}
                                                     disabled={posPayLoading === order.id}
+                                                    className="btn-details"
                                                     style={{ padding: '6px 12px', background: posPayLoading === order.id ? '#e5e7eb' : '#F0FDF4', color: posPayLoading === order.id ? '#9ca3af' : '#15803d', border: '1.5px solid #BBF7D0', borderRadius: '8px', fontWeight: 700, cursor: posPayLoading === order.id ? 'not-allowed' : 'pointer', fontSize: '0.78rem', whiteSpace: 'nowrap' }}
-                                                    onMouseEnter={e => { if (posPayLoading !== order.id) { e.target.style.background = '#15803d'; e.target.style.color = '#fff'; }}}
-                                                    onMouseLeave={e => { if (posPayLoading !== order.id) { e.target.style.background = '#F0FDF4'; e.target.style.color = '#15803d'; }}}
                                                 >{posPayLoading === order.id ? '⏳…' : '✅ Mark Paid'}</button>
                                             )}
                                         </div>

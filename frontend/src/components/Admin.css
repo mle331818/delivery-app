@@ -292,3 +292,247 @@
     background: #ffecb3;
     color: #ff8f00;
 }
+
+/* Bills Section Responsive */
+.bills-container {
+    margin-top: 1.75rem;
+}
+
+.bills-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.bills-header h3 {
+    margin: 0;
+    font-weight: 900;
+    color: #1a1a1a;
+    font-size: 1.15rem;
+    letter-spacing: -0.3px;
+}
+
+.period-filter {
+    display: flex;
+    gap: 4px;
+    background: #f0f0f0;
+    border-radius: 10px;
+    padding: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.period-btn {
+    padding: 5px 14px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.78rem;
+    transition: all 0.15s;
+    background: transparent;
+    color: #666;
+    white-space: nowrap;
+}
+
+.period-btn.active {
+    background: #c62828;
+    color: #fff;
+}
+
+.bills-stats {
+    margin-left: auto;
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.82rem;
+    color: #888;
+}
+
+.bills-table-wrapper {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+    overflow: hidden;
+    border: 1px solid #efefef;
+}
+
+.bills-grid {
+    display: grid;
+    grid-template-columns: 150px 1fr 100px 80px 190px;
+    align-items: center;
+    padding: 0.9rem 1.5rem;
+    border-bottom: 1px solid #f5f5f5;
+    transition: background 0.15s;
+}
+
+.bills-grid-header {
+    background: #f8f8f8;
+    border-bottom: 2px solid #f0f0f0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.bills-grid:last-child {
+    border-bottom: none;
+}
+
+.bills-grid.paid {
+    background: #fafff8;
+}
+
+.bills-grid:hover {
+    background: #f8f8ff;
+}
+
+.bills-grid.paid:hover {
+    background: #f2fdf0;
+}
+
+.bill-id-time {
+    display: flex;
+    flex-direction: column;
+}
+
+.bill-id-time strong {
+    font-weight: 800;
+    font-size: 0.93rem;
+    color: #1a1a1a;
+}
+
+.bill-id-time span {
+    font-size: 0.72rem;
+    color: #bbb;
+    margin-top: 2px;
+}
+
+.bill-items {
+    padding-right: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center;
+}
+
+.bill-item-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: #f3f4f6;
+    border-radius: 6px;
+    padding: 2px 8px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.bill-item-qty {
+    color: #c62828;
+    font-weight: 800;
+}
+
+.bill-total {
+    text-align: right;
+}
+
+.bill-total-amount {
+    font-weight: 900;
+    font-size: 0.97rem;
+    color: #111;
+}
+
+.bill-total-sub {
+    font-size: 0.68rem;
+    color: #ccc;
+}
+
+.bill-status {
+    text-align: center;
+}
+
+.bill-badge {
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.bill-badge.paid {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.bill-badge.pending {
+    background: #fff7ed;
+    color: #c2410c;
+}
+
+.bill-actions {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+    .bills-grid, .bills-grid-header {
+        grid-template-columns: 1fr 100px;
+        gap: 1rem;
+        padding: 1.25rem;
+    }
+
+    .bills-grid-header {
+        display: none;
+    }
+
+    .bill-items {
+        grid-column: 1 / -1;
+        padding: 0.5rem 0;
+    }
+
+    .bill-id-time {
+        order: 1;
+    }
+
+    .bill-total {
+        order: 2;
+    }
+
+    .bill-status {
+        grid-column: 1;
+        text-align: left;
+        order: 3;
+    }
+
+    .bill-actions {
+        grid-column: 2;
+        order: 4;
+    }
+}
+
+@media (max-width: 600px) {
+    .bills-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .bills-stats {
+        width: 100%;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-top: 1px solid #eee;
+    }
+
+    .period-filter {
+        width: 100%;
+    }
+
+    .period-btn {
+        flex: 1;
+        text-align: center;
+    }
+}
